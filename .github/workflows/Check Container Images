@@ -1,0 +1,35 @@
+name: Check Container Images
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Every Monday at 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-images:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check public images
+        shell: bash
+        run: |
+          set -e
+
+          images=(
+            "node:20-alpine"
+            "golang:1.23-alpine"
+            "alpine:3.20"
+          )
+
+          for image in "${images[@]}"; do
+            echo "Checking $image ..."
+
+            if docker manifest inspect "$image" > /dev/null 2>&1; then
+              echo "✅ $image is available"
+            else
+              echo "❌ $image is NOT available"
+              exit 1
+            fi
+          done
+
+          echo "✅ All images are available."
